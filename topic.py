@@ -132,5 +132,7 @@ class UpdateTopics:
 
 		print 'All task done'
 
-a = UpdateTopics()
-a.run()
+if __name__ == '__main__':
+	topic_spider = UpdateTopics()
+	topic_spider.run()
+
