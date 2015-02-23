@@ -1,71 +1,19 @@
 #coding=utf-8
 import MySQLdb
-import urllib2
 from bs4 import BeautifulSoup
 import json
 import re
 import time
 from math import ceil
 import logging
-import gzip
-import StringIO
 import threading
 import Queue
 import ConfigParser
 
-
-def get_content(toUrl,count):
-	""" Return the content of given url
-
-		Args:
-			toUrl: aim url
-			count: index of this connect
-
-		Return:
-			content if success
-			'Fail' if fail
-	"""
-
-	cf = ConfigParser.ConfigParser()
-	cf.read("config.ini")
-	cookie = cf.get("cookie", "cookie")
-
-	headers = {
-	    'Cookie': cookie,
-		'Host':'www.zhihu.com',
-		'Referer':'http://www.zhihu.com/',
-		'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
-		'Accept-Encoding':'gzip'
-	}
-
-	req = urllib2.Request(
-	    url = toUrl,
-	    headers = headers
-	)
-
-	try:
-		opener = urllib2.build_opener(urllib2.ProxyHandler())
-		urllib2.install_opener(opener)
-
-		page = urllib2.urlopen(req,timeout = 15)
-
-		headers = page.info()
-		content = page.read()
-	except Exception,e:
-		if count % 1 == 0:
-			print str(count) + ", Error: " + str(e) + " URL: " + toUrl
-		return "FAIL"
-
-	if page.info().get('Content-Encoding') == 'gzip':
-		data = StringIO.StringIO(content)
-		gz = gzip.GzipFile(fileobj=data)
-		content = gz.read()
-		gz.close()
-
-	return content
+from util import get_content
 
 
-class updateOneQuestion(threading.Thread):
+class UpdateOneQuestion(threading.Thread):
 	def __init__(self,queue):
 		self.queue = queue
 		threading.Thread.__init__(self)
@@ -80,8 +28,6 @@ class updateOneQuestion(threading.Thread):
 		db_name = cf.get("db", "db")
 		charset = cf.get("db", "charset")
 		use_unicode = cf.get("db", "use_unicode")
-
-		self.question_thread_amount = int(cf.get("question_thread_amount","question_thread_amount"))
 
 		self.db = MySQLdb.connect(host=host, port=port, user=user, passwd=passwd, db=db_name, charset=charset, use_unicode=use_unicode)
 		self.cursor = self.db.cursor()
@@ -185,8 +131,8 @@ class UpdateQuestions:
 
 		self.question_thread_amount = int(cf.get("question_thread_amount","question_thread_amount"))
 
-		db = MySQLdb.connect(host=host, port=port, user=user, passwd=passwd, db=db_name, charset=charset, use_unicode=use_unicode)
-		self.cursor = db.cursor()
+		self.db = MySQLdb.connect(host=host, port=port, user=user, passwd=passwd, db=db_name, charset=charset, use_unicode=use_unicode)
+		self.cursor = self.db.cursor()
 
 	def run(self):
 		queue = Queue.Queue()
@@ -211,7 +157,7 @@ class UpdateQuestions:
 		thread_amount = self.question_thread_amount
 
 		for i in range(thread_amount):
-			threads.append(updateOneQuestion(queue))
+			threads.append(UpdateOneQuestion(queue))
 
 		for i in range(thread_amount):
 			threads[i].start()
@@ -219,7 +165,7 @@ class UpdateQuestions:
 		for i in range(thread_amount):
 			threads[i].join()
 
-		db.close()
+		self.db.close()
 
 		print 'All task done'
 
