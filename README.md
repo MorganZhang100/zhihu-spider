@@ -21,7 +21,7 @@ MorganZhang100@gmail.com
 
 ## How to run it
 1. Download the code
-1. Run init.sql to set up datebase.
+1. Run init.sql to set up datebase and insert initial data.
 1. Find out your cookie of zhihu.com throught browser's developer tool.
 1. Modify config.ini
 1. Use ```python question.py``` to scrpy questions from zhihu.com
