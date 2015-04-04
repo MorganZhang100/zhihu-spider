@@ -20,7 +20,7 @@ class UpdateOneTopic(threading.Thread):
 
         cf = ConfigParser.ConfigParser()
         cf.read("config.ini")
-        
+
         host = cf.get("db", "host")
         port = int(cf.get("db", "port"))
         user = cf.get("db", "user")
@@ -31,7 +31,7 @@ class UpdateOneTopic(threading.Thread):
 
         self.db = MySQLdb.connect(host=host, port=port, user=user, passwd=passwd, db=db_name, charset=charset, use_unicode=use_unicode)
         self.cursor = self.db.cursor()
-        
+
     def run(self):
         while not self.queue.empty():
             t = self.queue.get()
@@ -45,7 +45,7 @@ class UpdateOneTopic(threading.Thread):
         if content == "FAIL":
             return 0
 
-        soup = BeautifulSoup(content)
+        soup = BeautifulSoup(content.text)
 
         questions = soup.findAll('a',attrs={'class':'question_link'})
 
@@ -74,7 +74,7 @@ class UpdateOneTopic(threading.Thread):
 
             if new_question_amount_one_page <= 2:
                 break
-        
+
         if count_id % 2 == 0:
             print str(count_id) + " , " + self.getName() + " Finshed TOPIC " + link_id + ", page " + str(i) + " ; Add " + str(new_question_amount_total) + " questions."
 
@@ -86,7 +86,7 @@ class UpdateTopics:
     def __init__(self):
         cf = ConfigParser.ConfigParser()
         cf.read("config.ini")
-        
+
         host = cf.get("db", "host")
         port = int(cf.get("db", "port"))
         user = cf.get("db", "user")
@@ -112,7 +112,7 @@ class UpdateTopics:
         sql = "SELECT LINK_ID FROM TOPIC WHERE LAST_VISIT < %s ORDER BY LAST_VISIT"
         self.cursor.execute(sql, (before_last_vist_time,))
         results = self.cursor.fetchall()
-        
+
         for row in results:
             link_id = str(row[0])
 

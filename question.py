@@ -20,7 +20,7 @@ class UpdateOneQuestion(threading.Thread):
 
         cf = ConfigParser.ConfigParser()
         cf.read("config.ini")
-        
+
         host = cf.get("db", "host")
         port = int(cf.get("db", "port"))
         user = cf.get("db", "user")
@@ -31,7 +31,7 @@ class UpdateOneQuestion(threading.Thread):
 
         self.db = MySQLdb.connect(host=host, port=port, user=user, passwd=passwd, db=db_name, charset=charset, use_unicode=use_unicode)
         self.cursor = self.db.cursor()
-        
+
     def run(self):
         while not self.queue.empty():
             parameters = self.queue.get()
@@ -49,7 +49,7 @@ class UpdateOneQuestion(threading.Thread):
             self.cursor.execute(sql,(time_now,link_id))
             return
 
-        soup = BeautifulSoup(content)
+        soup = BeautifulSoup(content.text)
 
         questions = soup.find('div',attrs={'class':'zg-gray-normal'})
 
@@ -97,7 +97,7 @@ class UpdateOneQuestion(threading.Thread):
         if count_id % 1 == 0:
             print str(count_id) + " , " + self.getName() + " Update QUESTION set FOCUS = " + focus_amount + " , ANSWER = " + answer_amount + ", LAST_VISIT = " + str(time_now) + ", TOP_ANSWER_NUMBER = " + str(top_answer_votes) + " where LINK_ID = " + link_id
         #print str(count_id) + " , " + self.getName() + " Update QUESTION set FOCUS = " + focus_amount + " , ANSWER = " + answer_amount + ", LAST_VISIT = " + str(time_now) + ", TOP_ANSWER_NUMBER = " + str(top_answer_votes) + " where LINK_ID = " + link_id
-        
+
         # Update this question
         sql = "UPDATE QUESTION SET FOCUS = %s , ANSWER = %s, LAST_VISIT = %s, TOP_ANSWER_NUMBER = %s WHERE LINK_ID = %s"
         self.cursor.execute(sql,(focus_amount,answer_amount,time_now,top_answer_votes,link_id))
@@ -112,7 +112,7 @@ class UpdateOneQuestion(threading.Thread):
                 topicUrl = topic.get('href').replace('/topic/','')
                 #sql_str = sql_str + "('" + topicName + "',0," + topicUrl + "," + str(time_now) + "),"
                 topicList = topicList + [(topicName, 0, topicUrl, time_now)]
-            
+
             self.cursor.executemany(sql_str,topicList)
 
 
@@ -120,7 +120,7 @@ class UpdateQuestions:
     def __init__(self):
         cf = ConfigParser.ConfigParser()
         cf.read("config.ini")
-        
+
         host = cf.get("db", "host")
         port = int(cf.get("db", "port"))
         user = cf.get("db", "user")
@@ -145,9 +145,9 @@ class UpdateQuestions:
         sql = "SELECT LINK_ID from QUESTION WHERE LAST_VISIT < %s AND ADD_TIME > %s AND ANSWER < 8 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
         self.cursor.execute(sql,(before_last_visit_time,after_add_time))
         results = self.cursor.fetchall()
-        
+
         i = 0
-        
+
         for row in results:
             link_id = str(row[0])
 
